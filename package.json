@@ -1,0 +1,10 @@
+{
+  "name": "@aws-rex/dashboard",
+  "version": "1.0.0",
+  "private": false,
+  "main": "./index.js",
+  "type": "module",
+  "dependencies": {
+    "@aws-rex/common-components": "workspace:*"
+  }
+}
