@@ -2,7 +2,7 @@
   "name": "@aws-rex/dashboard",
   "version": "1.0.0",
   "private": true,
-  "description": "Next.js dashboard pod (App Router, Tailwind CSS, Apollo-ready).",
+  "description": "Next.js dashboard source repo (App Router, Tailwind CSS, Apollo-ready).",
   "type": "module",
   "scripts": {
     "dev": "next dev",

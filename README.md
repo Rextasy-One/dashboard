@@ -32,8 +32,8 @@ pnpm format
 1. `package.json` → `"@aws-rex/common-components": "workspace:*"`.
 2. `next.config.ts` → `transpilePackages: ['@aws-rex/common-components']` compiles the library from
    TypeScript source (no separate build step).
-3. `next.config.ts` → `turbopack.root` points at the workspace root. Because each pod is its own git
-   repository, Turbopack's automatic root detection stops at the pod boundary; this keeps `next` and
+3. `next.config.ts` → `turbopack.root` points at the workspace root. Because each source repo is its own git
+   repository, Turbopack's automatic root detection stops at the repo boundary; this keeps `next` and
    the shared source resolvable.
 4. `src/app/globals.css` → `@source '../../../common-components/src'` so Tailwind generates the
    utility classes used inside the library.
