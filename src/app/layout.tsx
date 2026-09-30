@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Aws Rex Dashboard',
+  title: 'Rextasy One Dashboard',
   description: 'Hello World dashboard built with Next.js, Tailwind CSS and shared components.',
 };
 
@@ -23,9 +23,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-slate-50 text-slate-900">
-        <Header brand="Aws Rex" />
+        <Header brand="Rextasy One" />
         <main className="flex-1">{children}</main>
-        <Footer owner="Aws Rex" />
+        <Footer owner="Rextasy One" />
       </body>
     </html>
   );
