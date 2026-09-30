@@ -29,7 +29,7 @@ pnpm format
 
 ## How it consumes the shared library
 
-1. `package.json` → `"@aws-rex/common-components": "workspace:*"`.
+1. `package.json` → `"@aws-rex/common-components": "^1.0.0"`.
 2. `next.config.ts` → `transpilePackages: ['@aws-rex/common-components']` compiles the library from
    TypeScript source (no separate build step).
 3. `next.config.ts` → `turbopack.root` points at the workspace root. Because each source repo is its own git
@@ -48,6 +48,13 @@ src/
 │   └── page.tsx      # Hello World
 └── ...
 ```
+
+## Brand and navigation
+
+`<Header />` and `<Footer />` default to the shared `BRAND` constant (`'Rex Staples'`) from
+`@aws-rex/common-components`, so the site name is defined in exactly one place. The primary nav links
+are `Home` (`/`), `Dashboard` (`/dashboard`) and `Resume` (`/resume`). Apps that do not serve a route
+should pass an explicit `items` array to `Header` to suppress it.
 
 ## Tooling
 
