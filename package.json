@@ -1,10 +1,33 @@
 {
   "name": "@aws-rex/dashboard",
   "version": "1.0.0",
-  "private": false,
-  "main": "./index.js",
+  "private": true,
+  "description": "Next.js dashboard pod (App Router, Tailwind CSS, Apollo-ready).",
   "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
-    "@aws-rex/common-components": "workspace:*"
+    "@aws-rex/common-components": "workspace:*",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-next": "catalog:",
+    "prettier": "catalog:",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
   }
 }
