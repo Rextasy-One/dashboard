@@ -1,30 +1,20 @@
-export default function Home() {
+import { BRAND } from '@aws-rex/common-components';
+
+/**
+ * Placeholder splash shown at the dashboard's bare URL (`/`).
+ *
+ * Real content lives at `/dashboard`; this root route exists so hitting the
+ * origin directly is not a 404. It is intentionally empty of application UI.
+ */
+export default function DashboardSplashPage() {
   return (
-    <section className="mx-auto flex max-w-5xl flex-col gap-6 px-6 py-16">
-      <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">Hello World</p>
-      <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Dashboard bootstrapped.</h1>
-      <p className="max-w-2xl text-lg text-slate-600">
-        This page is served by Next.js and styled with Tailwind CSS. The header and footer are
-        rendered from the shared{' '}
-        <code className="rounded bg-slate-200 px-1.5 py-0.5 text-base">
-          @aws-rex/common-components
-        </code>{' '}
-        package.
+    <section className="mx-auto flex max-w-5xl flex-col items-center justify-center gap-4 px-6 py-24 text-center">
+      <p className="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">Dashboard</p>
+      <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">{BRAND}</h1>
+      <p className="max-w-xl text-lg text-slate-500">
+        Splash placeholder. Navigate to{' '}
+        <code className="rounded bg-slate-200 px-1.5 py-0.5">/dashboard</code> for the application.
       </p>
-      <div className="flex flex-wrap gap-3">
-        <a
-          className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-slate-700"
-          href="https://nextjs.org"
-        >
-          Next.js docs
-        </a>
-        <a
-          className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
-          href="https://tailwindcss.com"
-        >
-          Tailwind docs
-        </a>
-      </div>
     </section>
   );
 }
