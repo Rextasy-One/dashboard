@@ -49,6 +49,17 @@ src/
 └── ...
 ```
 
+## Tooling
+
+ESLint, Prettier, and TypeScript config come from
+[`@aws-rex/config`](https://github.com/Rextasy-One/config) as a versioned dependency (`^1.0.0`):
+
+```js
+// eslint.config.mjs
+import { nextConfig } from '@aws-rex/config/eslint/next';
+export default nextConfig();
+```
+
 ## Roadmap
 
 Apollo GraphQL wiring is next — see the workspace [`docs/ROADMAP.md`](../../docs/ROADMAP.md).
