@@ -13,7 +13,7 @@ From the workspace root, or from this directory:
 
 ```bash
 pnpm --filter @aws-rex/dashboard dev     # root
-pnpm dev                                  # or here → http://localhost:3000
+pnpm dev                                  # or here → http://localhost:3001
 ```
 
 ## Scripts
@@ -43,11 +43,16 @@ pnpm format
 ```
 src/
 ├── app/
-│   ├── globals.css   # Tailwind entry + @source for the shared library
-│   ├── layout.tsx    # renders <Header /> and <Footer />
-│   └── page.tsx      # Hello World
+│   ├── globals.css      # Tailwind entry + @source for the shared library
+│   ├── layout.tsx       # renders <Header /> and <Footer />
+│   ├── page.tsx         # splash placeholder at /
+│   └── dashboard/
+│       └── page.tsx     # the dashboard application at /dashboard
 └── ...
 ```
+
+> Runs on port `3001`. The marketing site (3000) proxies `/dashboard` here, so the shared header's
+> relative link works without any consumer knowing this port.
 
 ## Brand and navigation
 
