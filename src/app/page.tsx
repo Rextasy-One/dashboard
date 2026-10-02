@@ -1,10 +1,11 @@
 import { BRAND } from '@aws-rex/common-components';
 
 /**
- * Placeholder splash shown at the dashboard's bare URL (`/`).
+ * Splash shown at this app's root route.
  *
- * Real content lives at `/dashboard`; this root route exists so hitting the
- * origin directly is not a 404. It is intentionally empty of application UI.
+ * Standalone (no `basePath`) this is `/`. Behind the marketing site the dashboard
+ * is served at basePath `/dashboard`, which puts this page at `/dashboard` and the
+ * real application at `/dashboard/dashboard` — see `next.config.ts`.
  */
 export default function DashboardSplashPage() {
   return (
@@ -13,7 +14,8 @@ export default function DashboardSplashPage() {
       <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">{BRAND}</h1>
       <p className="max-w-xl text-lg text-slate-500">
         Splash placeholder. Navigate to{' '}
-        <code className="rounded bg-slate-200 px-1.5 py-0.5">/dashboard</code> for the application.
+        <code className="rounded bg-slate-200 px-1.5 py-0.5">/dashboard/dashboard</code> for the
+        application.
       </p>
     </section>
   );
