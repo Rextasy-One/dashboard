@@ -1,7 +1,8 @@
-import { Footer, Header } from '@aws-rex/common-components';
+import { Footer } from '@aws-rex/common-components';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
+import { Navigation } from '@/components/Navigation';
 import './globals.css';
 
 const geistSans = Geist({
@@ -23,7 +24,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-slate-50 text-slate-900">
-        <Header />
+        <Navigation basePath={process.env.NEXT_PUBLIC_BASE_PATH ?? ''} />
         <main className="flex-1">{children}</main>
         <Footer />
       </body>
