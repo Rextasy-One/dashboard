@@ -5,7 +5,8 @@
   "description": "Next.js dashboard source repo (App Router, Tailwind CSS, Apollo-ready).",
   "type": "module",
   "scripts": {
-    "dev": "next dev --port 3001",
+    "dev": "next dev",
+    "dev:https": "next dev --experimental-https --port 3001",
     "build": "next build",
     "start": "next start --port 3001",
     "lint": "eslint .",
