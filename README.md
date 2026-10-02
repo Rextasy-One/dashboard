@@ -35,7 +35,9 @@ pnpm format
 3. `next.config.ts` → `turbopack.root` points at the workspace root. Because each source repo is its own git
    repository, Turbopack's automatic root detection stops at the repo boundary; this keeps `next` and
    the shared source resolvable.
-4. `src/app/globals.css` → `@source '../../../common-components/src'` so Tailwind generates the
+4. `NEXT_PUBLIC_BASE_PATH=/dashboard` (set by `pnpm dev`) mounts the app under that prefix, so its
+   public URL is `/dashboard` and its assets are namespaced at `/dashboard/_next/*`.
+5. `src/app/globals.css` → `@source '../../../common-components/src'` so Tailwind generates the
    utility classes used inside the library.
 
 ## Layout
@@ -45,9 +47,7 @@ src/
 ├── app/
 │   ├── globals.css      # Tailwind entry + @source for the shared library
 │   ├── layout.tsx       # renders <Header /> and <Footer />
-│   ├── page.tsx         # splash placeholder at /
-│   └── dashboard/
-│       └── page.tsx     # the dashboard application at /dashboard
+│   └── page.tsx         # the dashboard application (app root route)
 └── ...
 ```
 
