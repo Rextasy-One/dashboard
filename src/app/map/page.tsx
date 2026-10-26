@@ -1,20 +1,32 @@
+import { MapCanvas } from '@/components/MapCanvas';
+
 export const metadata = {
   title: 'Map | Rex Staples',
 };
 
 /**
- * Map placeholder.
- *
- * The interactive map is not rendered yet. Google's Maps JavaScript API needs a key
- * and a billing-enabled Google Cloud project, so this page reports the missing
- * configuration instead of failing silently — the same approach the login page uses
- * for unconfigured providers.
- *
- * `NEXT_PUBLIC_` is required because the Maps JavaScript SDK runs in the browser and
- * the key is sent with every request. Restrict the key by HTTP referrer in Google
- * Cloud, which is the control that keeps a browser-exposed key safe.
+ * Shown when no key is present, so the page reports the missing configuration
+ * instead of failing silently — the same approach the login page uses for
+ * unconfigured providers.
  */
-const mapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+function NotConfigured() {
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-6">
+      <p className="font-medium text-slate-700">Not configured</p>
+      <p className="text-sm text-slate-600">
+        Set{' '}
+        <code className="rounded bg-slate-200 px-1.5 py-0.5">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</code>{' '}
+        to enable the map.
+      </p>
+      <ul className="flex list-disc flex-col gap-1 pl-5 text-sm text-slate-600">
+        <li>Enable the Maps JavaScript API on a Google Cloud project.</li>
+        <li>A billing account must be attached, even to stay inside the free tier.</li>
+        <li>Restrict the key by HTTP referrer before using it anywhere public.</li>
+        <li>Free allowance is 10,000 map loads per month, then roughly $7 per 1,000.</li>
+      </ul>
+    </div>
+  );
+}
 
 export default function MapPage() {
   return (
@@ -24,28 +36,7 @@ export default function MapPage() {
         <h1 className="text-3xl font-semibold tracking-tight">Map</h1>
       </header>
 
-      {mapsApiKey ? (
-        <div className="flex h-96 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500">
-          Key detected. Map rendering goes here.
-        </div>
-      ) : (
-        <div className="flex flex-col gap-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-6">
-          <p className="font-medium text-slate-700">Not configured</p>
-          <p className="text-sm text-slate-600">
-            Set{' '}
-            <code className="rounded bg-slate-200 px-1.5 py-0.5">
-              NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
-            </code>{' '}
-            to enable the map.
-          </p>
-          <ul className="flex list-disc flex-col gap-1 pl-5 text-sm text-slate-600">
-            <li>Enable the Maps JavaScript API on a Google Cloud project.</li>
-            <li>A billing account must be attached, even to stay inside the free tier.</li>
-            <li>Restrict the key by HTTP referrer before using it anywhere public.</li>
-            <li>Free allowance is 10,000 map loads per month, then roughly $7 per 1,000.</li>
-          </ul>
-        </div>
-      )}
+      <MapCanvas fallback={<NotConfigured />} />
     </section>
   );
 }
