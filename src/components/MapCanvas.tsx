@@ -1,8 +1,9 @@
 'use client';
 
-import { APIProvider, Map } from '@vis.gl/react-google-maps';
-import { useEffect, useState } from 'react';
+import { APIProvider, Map, type MapCameraChangedEvent } from '@vis.gl/react-google-maps';
+import { useCallback, useEffect, useState } from 'react';
 import { MapDebugPanel, type DebugInfo } from './MapDebugPanel';
+import { readViewport, viewportFromEvent, writeViewport } from './mapViewport';
 
 /**
  * Fallback centre when the browser will not provide a location, or the user denies
@@ -16,8 +17,16 @@ const LOCATED_ZOOM = 13;
 
 const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
-type Center = { lat: number; lng: number };
 type GeoResult = DebugInfo['geolocationResult'];
+
+/** The camera the map opens with, resolved once before the map mounts. */
+interface InitialCamera {
+  lat: number;
+  lng: number;
+  zoom: number;
+  mapType?: string;
+  source: 'saved' | 'geolocation' | 'fallback';
+}
 
 export interface MapCanvasProps {
   /** Rendered when the key is absent, instead of attempting to load the SDK. */
@@ -27,39 +36,61 @@ export interface MapCanvasProps {
 /**
  * Interactive map.
  *
- * Geolocation only sets the initial centre. There is no marker, and the map is not
- * recentred after load, so the user can pan without being pulled back. Denial or
- * failure falls back to a default centre silently.
+ * The camera is resolved ONCE and handed to the Map as `default*` props. React never
+ * mirrors the camera in state, so panning and zooming are owned entirely by the SDK
+ * and no effect fights the user.
  *
- * Do NOT extract the `typeof window !== 'undefined'` check into a constant, a helper,
- * or a useState initialiser. Three broken attempts, all hydration mismatches:
- *
- *   1. `typeof navigator !== 'undefined'` — Next defines `navigator` during server
- *      rendering, so this is TRUE on the server. Wrong signal, and it cannot be fixed
- *      by moving it around.
- *   2. A module-scope `const isClient = ...` — evaluated once per process. The server
- *      captures `false` and that value is replayed for every client.
- *   3. A `useState(() => ...)` initialiser — still runs during server rendering, so
- *      the server and client disagree on the first render.
- *
- * Inline is the only placement that is correct, because the expression must be
- * re-evaluated per render in the environment that render belongs to.
+ * Persistence: a saved viewport wins over geolocation, and every settled camera change
+ * is written to sessionStorage, so a hard refresh restores where the user left off.
  */
 export function MapCanvas({ fallback }: MapCanvasProps) {
-  const [center, setCenter] = useState<Center>(FALLBACK_CENTER);
-  const [located, setLocated] = useState(false);
-  const [geoResult, setGeoResult] = useState<GeoResult>('pending');
   /**
-   * Null until the browser reports. Null renders as "unknown" on both server and
-   * client, so the first client render matches the server exactly.
+   * Mount gate.
    *
-   * The check itself lives in the effect, where `window` definitively exists. Any
-   * version of it during render — inline, module-scope, or in a state initialiser —
-   * produces a mismatch, because the server render evaluates the branch too.
+   * `sessionStorage` and `navigator.geolocation` exist only in the browser. Rendering
+   * the map only after mount means the lazy initialisers below never run during server
+   * rendering, which is what caused four previous hydration mismatches. Do not replace
+   * this with a `typeof window` branch — that is evaluated by the server too.
    */
-  const [geoSupported, setGeoSupported] = useState<boolean | null>(null);
+  const [mounted, setMounted] = useState(false);
+  // The canonical browser-only gate. The rule flags synchronous setState in an effect,
+  // but this is the documented React pattern for "render this only on the client", and
+  // it is what prevents the four earlier hydration mismatches. Narrowly suppressed.
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- mount gate
+  useEffect(() => setMounted(true), []);
 
+  /**
+   * Read synchronously during the first client render, which is safe because the gate
+   * guarantees this component has not rendered on the server.
+   */
+  const [saved] = useState(() => (mounted ? readViewport() : null));
+
+  const [camera, setCamera] = useState<InitialCamera | null>(() => {
+    if (!mounted) return null;
+    if (saved) {
+      return {
+        lat: saved.lat,
+        lng: saved.lng,
+        zoom: saved.zoom,
+        ...(saved.mapType ? { mapType: saved.mapType } : {}),
+        source: 'saved',
+      };
+    }
+    return null;
+  });
+
+  const [geoResult, setGeoResult] = useState<GeoResult>(() => {
+    if (!mounted) return 'pending';
+    return saved ? 'not-requested' : 'pending';
+  });
+  const [geoSupported] = useState<boolean | null>(() =>
+    mounted ? Boolean(window.navigator.geolocation) : null,
+  );
+
+  // Geolocation is genuinely asynchronous, so it belongs in an effect. The state
+  // updates below happen in the browser callback, not synchronously in the effect body.
   useEffect(() => {
+    if (!mounted || saved) return;
     if (!window.navigator.geolocation) return;
 
     let cancelled = false;
@@ -67,15 +98,18 @@ export function MapCanvas({ fallback }: MapCanvasProps) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         if (cancelled) return;
-        setGeoSupported(true);
-        setCenter({ lat: position.coords.latitude, lng: position.coords.longitude });
-        setLocated(true);
+        setCamera({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          zoom: LOCATED_ZOOM,
+          source: 'geolocation',
+        });
         setGeoResult('granted');
       },
       (error) => {
         if (cancelled) return;
-        setGeoSupported(true);
-        // Denied or unavailable. Silent by design; the fallback centre stands.
+        setCamera({ ...FALLBACK_CENTER, zoom: FALLBACK_ZOOM, source: 'fallback' });
+        // Silent by design; the fallback centre stands.
         setGeoResult(error.code === error.PERMISSION_DENIED ? 'denied' : 'unavailable');
       },
       { enableHighAccuracy: false, timeout: 5000, maximumAge: 300000 },
@@ -84,6 +118,12 @@ export function MapCanvas({ fallback }: MapCanvasProps) {
     return () => {
       cancelled = true;
     };
+  }, [mounted, saved]);
+
+  /** Records what the user chose. Fires on drag end and zoom end. */
+  const handleCameraChanged = useCallback((event: MapCameraChangedEvent) => {
+    const viewport = viewportFromEvent(event);
+    if (viewport) writeViewport(viewport);
   }, []);
 
   const info: DebugInfo = {
@@ -91,7 +131,9 @@ export function MapCanvas({ fallback }: MapCanvasProps) {
     keySuffix: API_KEY ? API_KEY.slice(-6) : '',
     geolocationSupported: geoSupported,
     geolocationResult: geoResult,
-    coords: located ? center : null,
+    coords: camera?.source === 'geolocation' ? { lat: camera.lat, lng: camera.lng } : null,
+    restoredViewport: saved,
+    restored: camera?.source === 'saved',
   };
 
   if (!API_KEY) {
@@ -105,19 +147,27 @@ export function MapCanvas({ fallback }: MapCanvasProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="h-96 overflow-hidden rounded-lg border border-slate-300">
-        <APIProvider apiKey={API_KEY}>
-          <Map
-            defaultCenter={center}
-            defaultZoom={located ? LOCATED_ZOOM : FALLBACK_ZOOM}
-            gestureHandling="greedy"
-            disableDefaultUI={false}
-            style={{ width: '100%', height: '100%' }}
-          />
-          {/* Inside APIProvider so the SDK status hook has its context. */}
-          <MapDebugPanel info={info} />
-        </APIProvider>
-      </div>
+      {camera === null ? (
+        <div className="flex h-96 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-500">
+          Resolving viewport…
+        </div>
+      ) : (
+        <div className="h-96 overflow-hidden rounded-lg border border-slate-300">
+          <APIProvider apiKey={API_KEY}>
+            <Map
+              defaultCenter={{ lat: camera.lat, lng: camera.lng }}
+              defaultZoom={camera.zoom}
+              {...(camera.mapType ? { defaultMapTypeId: camera.mapType as never } : {})}
+              gestureHandling="greedy"
+              disableDefaultUI={false}
+              onCameraChanged={handleCameraChanged}
+              style={{ width: '100%', height: '100%' }}
+            />
+          </APIProvider>
+        </div>
+      )}
+      {/* Outside the overflow-hidden map container, so it is not clipped. */}
+      <MapDebugPanel info={info} />
     </div>
   );
 }

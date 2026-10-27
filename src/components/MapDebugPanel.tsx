@@ -14,25 +14,31 @@ export interface DebugInfo {
   geolocationResult: 'pending' | 'granted' | 'denied' | 'unavailable' | 'not-requested';
   /** Coordinates, when the request succeeded. */
   coords: { lat: number; lng: number } | null;
+  /** Viewport read from sessionStorage, if any. */
+  restoredViewport: { lat: number; lng: number; zoom: number; mapType?: string } | null;
+  /** True when the camera came from a saved viewport rather than geolocation. */
+  restored: boolean;
 }
 
 /**
- * Reads `document.referrer` after mount.
+ * Reads the referrer and the live saved viewport from the browser.
  *
- * Reading it during render differs between server and client and causes a hydration
- * mismatch, which is how this was found. Rendering nothing until mounted keeps the
- * first client render identical to the server's.
+ * Both are read in effects, never during render: they do not exist on the server and
+ * reading them during render causes a hydration mismatch.
  */
-function useReferrer(): string | null {
+function useBrowserState(): { referrer: string | null; stored: string | null } {
   const [referrer, setReferrer] = useState<string | null>(null);
+  const [stored, setStored] = useState<string | null>(null);
 
   useEffect(() => {
-    // Deferred to a microtask so the value never lands in the same commit as
-    // hydration.
-    queueMicrotask(() => setReferrer(document.referrer || '(none)'));
+    // Deferred to a microtask so neither value lands in the same commit as hydration.
+    queueMicrotask(() => {
+      setReferrer(document.referrer || '(none)');
+      setStored(window.sessionStorage.getItem('dashboard.map.viewport'));
+    });
   }, []);
 
-  return referrer;
+  return { referrer, stored };
 }
 
 function Row({ label, value, ok }: { label: string; value: string; ok?: boolean }) {
@@ -78,7 +84,7 @@ export function ApiStatus() {
  * environment.
  */
 export function MapDebugPanel({ info }: { info: DebugInfo }) {
-  const referrer = useReferrer();
+  const { referrer, stored } = useBrowserState();
 
   return (
     <details className="rounded-lg border border-slate-300 bg-white" open>
@@ -111,6 +117,23 @@ export function MapDebugPanel({ info }: { info: DebugInfo }) {
             value={`${info.coords.lat.toFixed(5)}, ${info.coords.lng.toFixed(5)}`}
           />
         ) : null}
+
+        <div className="mt-2 border-t border-slate-200 pt-3">
+          <p className="mb-1 text-slate-500">Viewport</p>
+          <Row
+            label="Restored from storage"
+            value={info.restored ? 'yes' : 'no'}
+            ok={info.restored ? true : undefined}
+          />
+          {info.restoredViewport ? (
+            <Row
+              label="Saved value"
+              value={`${info.restoredViewport.lat.toFixed(4)}, ${info.restoredViewport.lng.toFixed(4)} @ z${info.restoredViewport.zoom}`}
+            />
+          ) : null}
+          <Row label="sessionStorage now" value={stored ?? '(empty)'} />
+        </div>
+
         <div className="mt-2 border-t border-slate-200 pt-3">
           <p className="mb-1 text-slate-500">SDK</p>
           {info.keyPresent ? (
